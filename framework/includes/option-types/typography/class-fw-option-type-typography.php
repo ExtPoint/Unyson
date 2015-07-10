@@ -68,7 +68,6 @@ class FW_Option_Type_Typography extends FW_Option_Type
 		);
 		$fw_typography_fonts = $this->get_fonts();
 		wp_localize_script('fw-option-' . $this->get_type(), 'fw_typography_fonts', $fw_typography_fonts);
-		wp_localize_script('fw-option-' . $this->get_type(), 'googleFonts', $fw_typography_fonts['google']);
 	}
 
 	/**
@@ -106,10 +105,10 @@ class FW_Option_Type_Typography extends FW_Option_Type
 		), $components);
 
 		$values = array(
-			'size' => ($components['size']) ? (isset($input_value['size'])) ? intval($input_value['size']) : intval($option['value']['size']) : false,
-			'family' => ($components['family']) ? (isset($input_value['family'])) ? $input_value['family'] : $option['value']['family'] : false,
-			'style' => ($components['family']) ? (isset($input_value['style'])) ? $input_value['style'] : $option['value']['style'] : false,
-			'color' => ($components['color']) ? (isset($input_value['color']) && preg_match('/^#[a-f0-9]{6}$/i', $input_value['color'])) ? $input_value['color'] : $option['value']['color'] : false,
+			'size'   => ( ! empty( $components['size'] ) ) ? ( isset( $input_value['size'] ) ) ? intval( $input_value['size'] ) : intval( $option['value']['size'] ) : false,
+			'family' => ( ! empty( $components['family'] ) ) ? ( isset( $input_value['family'] ) ) ? $input_value['family'] : $option['value']['family'] : false,
+			'style'  => ( ! empty( $components['family'] ) ) ? ( isset( $input_value['style'] ) ) ? $input_value['style'] : $option['value']['style'] : false,
+			'color'  => ( ! empty( $components['color'] ) ) ? ( isset( $input_value['color'] ) && preg_match( '/^#[a-f0-9]{6}$/i', $input_value['color'] ) ) ? $input_value['color'] : $option['value']['color'] : false,
 		);
 
 		return $values;
@@ -137,7 +136,7 @@ class FW_Option_Type_Typography extends FW_Option_Type
 
 	public function _get_backend_width_type()
 	{
-		return 'auto';
+		return 'fixed';
 	}
 }
 

@@ -1,12 +1,14 @@
-# Unyson Framework
+# Unyson Framework [ ![Download](https://static.md/c1cea378c63f839fbede18687134423f.jpeg) ](https://github.com/ThemeFuse/Unyson/releases/latest)
 
-[Unyson](http://unyson.themefuse.com/) is a framework for [WordPress](http://wordpress.org/) that facilitates the development of a theme.
+[Unyson](http://unyson.io/) is a framework for [WordPress](http://wordpress.org/) that facilitates the development of a theme.
 
 This framework was created from the ground up by the team behind [ThemeFuse](http://themefuse.com/) from the desire to empower developers to build outstanding WordPress themes fast and easy.
 
 To get started, check out the [Scratch Theme](https://github.com/ThemeFuse/Scratch-Theme).
 
 If you are not a developer, please use the [Unyson plugin page](https://wordpress.org/plugins/unyson/) on WordPress.org.
+
+[![Build Status](https://travis-ci.org/ThemeFuse/Unyson.svg?branch=master)](https://travis-ci.org/ThemeFuse/Unyson)
 
 ## Table of contents
 
@@ -19,7 +21,7 @@ If you are not a developer, please use the [Unyson plugin page](https://wordpres
 
 ## Installation
 
-1. [Download the latest release](https://github.com/ThemeFuse/Unyson/releases/latest)
+1. [Download](https://github.com/ThemeFuse/Unyson/releases/latest) the latest stable release
 2. Extract the archive to the `/wp-content/plugins/unyson/` directory
 3. Activate the Unyson plugin through the 'Plugins' menu in WordPress
 4. Configure the plugin by going to the Unyson menu that appears in your admin menu
@@ -44,19 +46,19 @@ A good bug report includes full details to easily understand the issue you are h
 
 ## Documentation
 
-Unyson's documentation is available on http://manual.unyson.io/
+Unyson's documentation is available on http://manual.unyson.io/.
+
+You can help us improve the documentation by contributing to this [Github repository](https://github.com/ThemeFuse/Unyson-Documentation).
 
 ## Copyright and license
 
-Code and documentation copyright 2014 ThemeFuse LTD. Code released under [the GPL license](https://github.com/ThemeFuse/Unyson/blob/master/LICENSE). Docs released under [Creative Commons](https://github.com/ThemeFuse/Unyson-Documentation/blob/master/LICENSE).
+Code and documentation copyright 2014 ThemeFuse LTD. Code released under [the GPL license](https://github.com/ThemeFuse/Unyson/blob/master/framework/LICENSE). Docs released under [Creative Commons](https://github.com/ThemeFuse/Unyson-Documentation/blob/master/LICENSE).
 
 ## Contributing
 
 Developers can contribute to the source code. Please read our [contributor guidelines](https://github.com/ThemeFuse/Unyson/blob/master/CONTRIBUTING.md) for more information how you can do this.
 
 Translators can contribute new languages to Unyson through [Transifex](https://www.transifex.com/projects/p/unyson/).
-
-If you have an idea for Unyson, see the [Trello board](https://trello.com/b/Xm9TxasH/unyson-development).
 
 Theme developers can test the compatibility of their themes with new extensions updates before they are going to be released on [Unyson Extensions Approval](https://github.com/ThemeFuse/Unyson-Extensions-Approval).
 
@@ -78,6 +80,7 @@ If you have a bug report or feature request related to a specific extension, fol
 * [Breadcrumbs](https://github.com/ThemeFuse/Unyson-Breadcrumbs-Extension)
 * [Learning](https://github.com/ThemeFuse/Unyson-Learning-Extension)
 * [Events](https://github.com/ThemeFuse/Unyson-Events-Extension)
+* [Translation](https://github.com/ThemeFuse/Unyson-Translation-Extension)
 * [Update](https://github.com/ThemeFuse/Unyson-Update-Extension)
 * [Analytics](https://github.com/ThemeFuse/Unyson-Analytics-Extension)
 * [Builder](https://github.com/ThemeFuse/Unyson-Builder-Extension)
