@@ -25,7 +25,7 @@
 		'color'  => '#000000',
 	), (array)$option['value']);
 
-	$data['value'] = array_merge($option['value'], array_filter((array)$data['value']));
+	$data['value'] = array_merge($option['value'], is_array($data['value']) ? $data['value'] : array());
 }
 ?>
 <div <?php echo fw_attr_to_html($wrapper_attr) ?>>
@@ -58,11 +58,11 @@
 				'700italic' => 'Bold/Italic',
 			)
 			as $key => $style): ?>
-				<option value="<?php echo esc_attr($key) ?>" <?php if ($data['value']['style'] == $key): ?>selected="selected"<?php endif; ?>><?php echo fw_htmlspecialchars($style) ?></option>
+				<option value="<?php echo esc_attr($key) ?>" <?php if ($data['value']['style'] === $key): ?>selected="selected"<?php endif; ?>><?php echo fw_htmlspecialchars($style) ?></option>
 		<?php endforeach; ?>
 		<?php else: ?>
 		<?php foreach ($fonts['google'][$data['value']['family']]['variants'] as $variant): ?>
-			<option value="<?php echo esc_attr($variant) ?>" <?php if ($data['value']['style'] == $variant): ?>selected="selected"<?php endif; ?>><?php echo fw_htmlspecialchars(ucfirst($variant)) ?></option>
+			<option value="<?php echo esc_attr($variant) ?>" <?php if ($data['value']['style'] === $variant): ?>selected="selected"<?php endif; ?>><?php echo fw_htmlspecialchars(ucfirst($variant)) ?></option>
 		<?php endforeach; ?>
 		<?php endif; ?>
 		</select>
