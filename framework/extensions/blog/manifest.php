@@ -10,4 +10,4 @@ $manifest['version'] = '1.0.0';
 $manifest['display'] = false;
 $manifest['standalone'] = true;
 
-$manifest['github_update'] = 'ThemeFuse/Unyson-Blog-Extension';
+$manifest['github_update'] = '';
