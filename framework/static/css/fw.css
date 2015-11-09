@@ -3055,7 +3055,7 @@ body.rtl .fw-modal .media-frame-content > form .fw-options-tabs-contents .fw-opt
 }
 
 .fw-sole-modal > .media-modal-backdrop {
-	z-index: 100000;
+	z-index: 499999;
 	background-color: transparent;
 }
 
@@ -3098,9 +3098,13 @@ body.rtl .fw-modal .media-frame-content > form .fw-options-tabs-contents .fw-opt
 	font-style: italic;
 }
 
-.qtip.qtip-fw .qtip-content a {
+.qtip-fw .qtip-content a {
 	color: #5fc5ee;
 	text-decoration: underline;
+}
+
+.qtip-fw .qtip-content a.button.button-primary {
+	color: #ffffff;
 }
 
 .qtip.qtip-fw .qtip-content a:hover {

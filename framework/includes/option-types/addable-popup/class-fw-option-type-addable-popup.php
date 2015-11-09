@@ -55,7 +55,10 @@ class FW_Option_Type_Addable_Popup extends FW_Option_Type
 
 		$sortable_image = fw_get_framework_directory_uri('/static/img/sort-vertically.png');
 
-		return fw_render_view(fw_get_framework_directory('/includes/option-types/' . $this->get_type() . '/views/view.php'), compact('id', 'option', 'data', 'sortable_image'));
+		return fw_render_view(
+			fw_get_framework_directory('/includes/option-types/' . $this->get_type() . '/views/view.php'),
+			compact('id', 'option', 'data', 'sortable_image')
+		);
 	}
 
 	/*
@@ -102,17 +105,22 @@ class FW_Option_Type_Addable_Popup extends FW_Option_Type
 	 */
 	protected function _get_value_from_input($option, $input_value)
 	{
-		if (!is_array($input_value)) {
-			return $option['value'];
+		if (is_array($input_value)) {
+			$option['limit'] = intval($option['limit']);
+
+			$values = array_map('json_decode', $input_value, array_fill(0, count($input_value), true));
+
+			if ($option['limit']) {
+				$values= array_slice($values, 0 , $option['limit']);
+			}
+		} else {
+			$values = $option['value'];
 		}
 
-		$option['limit'] = intval($option['limit']);
-
-		$values = array_map('json_decode', $input_value, array_fill(0, count($input_value), true));
-
-		if($option['limit']){
-			$values= array_slice($values, 0 , $option['limit']);
-		}
+		/**
+		 * For e.g. option type 'unique' needs to execute _get_value_from_input() for each option to prevent duplicate values
+		 */
+		$values = apply_filters('fw:option-type:addable-popup:value-from-input', $values, $option);
 
 		return $values;
 	}

@@ -587,12 +587,13 @@ fw.getQueryString = function(name) {
 	 * Usage:
 	 * var modal = new fw.Modal();
 	 *
-	 * modal.on('open|close', function(){});
+	 * modal.on('open|closing|close', function(){});
 	 */
 	fw.Modal = Backbone.Model.extend({
 		defaults: {
 			/* Modal title */
 			title: 'Edit Options',
+			headerElements: '',
 			/**
 			 * Content html
 			 * @private
@@ -656,11 +657,28 @@ fw.getQueryString = function(name) {
 				defaults: {
 					content: 'main',
 					menu: 'default',
-					title: this.get('title')
+					title: this.get('title'),
+					headerElements: this.get('headerElements')
 				},
 				initialize: function() {
 					this.listenTo(modal, 'change:title', function(){
 						this.set('title', modal.get('title'));
+					});
+				},
+				activate: function () {
+					this.listenTo(this.frame, 'title:create:default', function () {
+						this.frame.title.mode(this.id);
+					});
+
+					this.listenTo(this.frame, 'title:create:' + this.id, function (title) {
+						title.view = new wp.media.View({
+							controller: this,
+							tagName: 'h1'
+						});
+					});
+
+					this.listenTo(this.frame, 'title:render:' + this.id, function (view) {
+						view.$el.html(this.get('title') + this.get('headerElements') || '');
 					});
 				}
 			});
@@ -766,6 +784,8 @@ fw.getQueryString = function(name) {
 						}
 
 						closeEffect();
+
+						modal.trigger('closing');
 					}
 
 					// add events that prevent original close
@@ -793,6 +813,8 @@ fw.getQueryString = function(name) {
 						modal.resizeTabsContent();
 					});
 				}
+
+				modal.trigger('open');
 			});
 
 			this.frame.on('close', function(){
@@ -812,6 +834,8 @@ fw.getQueryString = function(name) {
 				modal.frame.modal.$el.removeClass('fw-modal-open');
 
 				modalsStack.pop();
+
+				modal.trigger('close');
 			});
 
 			this.frame.on('content:create:main', function () {
@@ -828,16 +852,23 @@ fw.getQueryString = function(name) {
 				controller: this.frame,
 				model: this
 			});
+
+			/**
+			 * This allows to access from DOM the modal instance
+			 */
+			jQuery.data(this.content.el, 'modal', this);
 		},
 		initialize: function() {
 			this.initializeFrame();
 			this.initializeContent();
 		},
-		/**
-		 * @param {Object} options used for fw()->backend->render_options(json_decode(options, true))
-		 */
 		open: function() {
 			this.frame.open();
+
+			return this;
+		},
+		close: function() {
+			this.frame.$el.closest('.media-modal').find('.media-modal-close:first').trigger('click');
 
 			return this;
 		},
@@ -914,7 +945,9 @@ fw.getQueryString = function(name) {
 			onSubmit: function(e) {
 				e.preventDefault();
 
-				fw.loading.show(fwLoadingId);
+				var loadingId = fwLoadingId +':submit';
+
+				fw.loading.show(loadingId);
 
 				jQuery.ajax({
 					url: ajaxurl,
@@ -927,7 +960,7 @@ fw.getQueryString = function(name) {
 					].join('&'),
 					dataType: 'json',
 					success: _.bind(function (response, status, xhr) {
-						fw.loading.hide(fwLoadingId);
+						fw.loading.hide(loadingId);
 
 						if (!response.success) {
 							/**
@@ -945,7 +978,53 @@ fw.getQueryString = function(name) {
 						this.model.frame.modal.$el.find('.media-modal-close').trigger('click');
 					}, this),
 					error: function (xhr, status, error) {
-						fw.loading.hide(fwLoadingId);
+						fw.loading.hide(loadingId);
+
+						/**
+						 * do not replace html here
+						 * user completed the form with data and wants to submit data
+						 * do not delete all his work
+						 */
+						alert(status +': '+ error.message);
+					}
+				});
+			},
+			resetForm: function() {
+				var loadingId = fwLoadingId +':reset';
+
+				fw.loading.show(loadingId);
+
+				jQuery.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: [
+						'action=fw_backend_options_get_values',
+						'options='+ encodeURIComponent(JSON.stringify(this.model.get('options'))),
+						'name_prefix=fw_edit_options_modal'
+					].join('&'),
+					dataType: 'json',
+					success: _.bind(function (response, status, xhr) {
+						fw.loading.hide(loadingId);
+
+						if (!response.success) {
+							/**
+							 * do not replace html here
+							 * user completed the form with data and wants to submit data
+							 * do not delete all his work
+							 */
+							alert('Error: '+ response.data.message);
+							return;
+						}
+
+						// make sure on the below open, the html 'change' will be fired
+						this.model.set('html', '', {
+							silent: true // right now we don't need modal reRender, only when the open below
+						});
+
+						this.model.open(response.data.values);
+					}, this),
+					error: function (xhr, status, error) {
+						fw.loading.hide(loadingId);
 
 						/**
 						 * do not replace html here
@@ -984,12 +1063,12 @@ fw.getQueryString = function(name) {
 		initializeFrame: function() {
 			fw.Modal.prototype.initializeFrame.call(this);
 
-			var modal = this;
+			this.frame.once('ready', _.bind(function() {
+				this.frame.$el.removeClass('hide-toolbar');
+				this.frame.modal.$el.addClass('fw-options-modal');
+			}, this));
 
-			this.frame.once('ready', function() {
-				modal.frame.$el.removeClass('hide-toolbar');
-				modal.frame.modal.$el.addClass('fw-options-modal');
-			});
+			var modal = this;
 
 			this.frame.on('content:create:main', function () {
 				modal.frame.toolbar.set(
@@ -1008,6 +1087,14 @@ fw.getQueryString = function(name) {
 									 */
 									modal.content.$el.find('input[type="submit"].hidden-submit').trigger('click');
 								}
+							},
+							{
+								style: '',
+								text: _fw_localized.l10n.reset,
+								priority: -1,
+								click: function () {
+									modal.content.resetForm();
+								}
 							}
 						]
 					})
@@ -1015,24 +1102,24 @@ fw.getQueryString = function(name) {
 			});
 		},
 		/**
-		 * @param {Object} options used for fw()->backend->render_options(json_decode(options, true))
+		 * @param {Object} [values] Offer custom values for display. The user can reject them by closing the modal
 		 */
-		open: function() {
+		open: function(values) {
 			fw.Modal.prototype.open.call(this);
 
-			this.updateHtml();
+			this.updateHtml(values);
 
 			return this;
 		},
-		getHtmlCacheId: function() {
+		getHtmlCacheId: function(values) {
 			return fw.md5(
 				JSON.stringify(this.get('options')) +
 				'~' +
-				JSON.stringify(this.get('values'))
+				JSON.stringify(typeof values == 'undefined' ? this.get('values') : values)
 			);
 		},
-		updateHtml: function() {
-			var cacheId = this.getHtmlCacheId();
+		updateHtml: function(values) {
+			var cacheId = this.getHtmlCacheId(values);
 
 			if (typeof htmlCache[cacheId] != 'undefined') {
 				this.set('html', htmlCache[cacheId]);
@@ -1051,7 +1138,7 @@ fw.getQueryString = function(name) {
 				data: {
 					action: 'fw_backend_options_render',
 					options: JSON.stringify(this.get('options')),
-					values: this.get('values'),
+					values: typeof values == 'undefined' ? this.get('values') : values,
 					data: {
 						name_prefix: 'fw_edit_options_modal',
 						id_prefix: 'fw-edit-options-modal-'
@@ -1433,6 +1520,7 @@ fw.soleModal = (function(){
 				width: 350
 				height: 200
 				hidePrevious: false // just replace the modal content or hide the previous modal and open it again with new content
+				updateIfCurrent: false // if current open modal has the same id as modal requested to show, update it without reopening
 				afterOpen: function(){}
 				afterClose: function(){}
 			}
@@ -1455,7 +1543,7 @@ fw.soleModal = (function(){
 				'<div class="fw-modal fw-sole-modal" style="display:none;">'+
 				'    <div class="media-modal wp-core-ui" style="width: 350px; height: 200px;">'+
 				'        <div class="media-modal-content" style="min-height: 200px;">' +
-				'            <a class="media-modal-close" href="#" onclick="return false;"><span class="media-modal-icon"></span></a>'+
+				'            <button type="button" class="button-link media-modal-close"><span class="media-modal-icon"></span></button>'+
 				'            <table width="100%" height="100%"><tbody><tr>'+
 				'                <td valign="middle" class="fw-sole-modal-content fw-text-center"><!-- modal content --></td>'+
 				'            </tr><tbody></table>'+
@@ -1526,6 +1614,22 @@ fw.soleModal = (function(){
 				return false;
 			}
 		},
+		setSize: function(width, height) {
+			var $size = this.$modal.find('> .media-modal');
+
+			if (
+				$size.height() != height
+				||
+				$size.width() != width
+			) {
+				$size.animate({
+					'height': height +'px',
+					'width': width +'px'
+				}, this.animationTime);
+			}
+
+			$size = undefined;
+		},
 		/**
 		 * Show modal
 		 * Call without arguments to display next from queue
@@ -1547,6 +1651,7 @@ fw.soleModal = (function(){
 						width: 350,
 						height: 200,
 						hidePrevious: false,
+						updateIfCurrent: false,
 						afterOpen: function(){},
 						afterClose: function(){}
 					}, opts || {});
@@ -1568,7 +1673,21 @@ fw.soleModal = (function(){
 			}
 
 			if (this.current) {
-				return false;
+				if (
+					this.queue.length
+					&&
+					this.queue[0].id === this.current.id
+					&&
+					this.queue[0].updateIfCurrent
+				) {
+					this.current = this.queue.shift();
+
+					this.setContent(this.current.html);
+
+					return true;
+				} else {
+					return false;
+				}
 			}
 
 			this.currentMethod = '';
@@ -1591,23 +1710,7 @@ fw.soleModal = (function(){
 
 			this.$modal.css('display', '');
 
-			// set size
-			{
-				var $size = this.$modal.find('> .media-modal');
-
-				if (
-					$size.height() != this.current.height
-					||
-					$size.width() != this.current.width
-				) {
-					$size.animate({
-						'height': this.current.height +'px',
-						'width': this.current.width +'px'
-					}, this.animationTime);
-				}
-
-				$size = undefined;
-			}
+			this.setSize(this.current.width, this.current.height);
 
 			this.currentMethodTimeoutId = setTimeout(_.bind(function() {
 				this.current.afterOpen();
@@ -1626,6 +1729,8 @@ fw.soleModal = (function(){
 					}, this), this.current.autoHide);
 				}
 			}, this), this.animationTime * 2);
+
+			return true;
 		},
 		/**
 		 * @param {String} [id]

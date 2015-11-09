@@ -393,6 +393,8 @@ class FW_Option_Type_Checkbox extends FW_Option_Type {
 		if (
 			defined('DOING_AJAX') && DOING_AJAX
 			&&
+			is_string($data['value'])
+			&&
 			in_array($data['value'], array('false', 'true'))
 		) {
 			/**
@@ -413,14 +415,15 @@ class FW_Option_Type_Checkbox extends FW_Option_Type {
 
 		unset( $option['attr']['value'] );
 
-		return '<input type="checkbox" name="' . esc_attr( $option['attr']['name'] ) . '" value="" checked="checked" style="display: none">' .
-		       '<!-- used for "' . esc_attr( $id ) . '" to be present in _POST -->' .
-		       '' .
-		       '<label for="' . esc_attr( $option['attr']['id'] ) . '">' .
-		       '<input ' . fw_attr_to_html( $option['attr'] ) . ' type="checkbox" value="true" ' .
-		       ( $option['value'] ? 'checked="checked" ' : '' ) .
-		       '> ' . htmlspecialchars( $option['text'], ENT_COMPAT, 'UTF-8' ) .
-		       '</label>';
+		return ''.
+			'<input type="checkbox" name="' . esc_attr( $option['attr']['name'] ) . '" value="" checked="checked" style="display: none">' .
+			'<!-- used for "' . esc_attr( $id ) . '" to be present in _POST -->' .
+			'' .
+			'<label for="' . esc_attr( $option['attr']['id'] ) . '">' .
+				'<input ' . fw_attr_to_html( $option['attr'] ) . ' type="checkbox" value="true" ' .
+					( $option['value'] ? 'checked="checked" ' : '' ) .
+				'> ' . htmlspecialchars( $option['text'], ENT_COMPAT, 'UTF-8' ) .
+			'</label>';
 	}
 
 	/**
@@ -1007,7 +1010,8 @@ class FW_Option_Type_Unique extends FW_Option_Type
 	protected function _get_defaults()
 	{
 		return array(
-			'value' => ''
+			'value' => '',
+			'length' => 0, // Limit id length
 		);
 	}
 
@@ -1022,6 +1026,22 @@ class FW_Option_Type_Unique extends FW_Option_Type
 
 	protected function _init() {
 		add_action('save_post', array($this, '_action_reset_post_ids'), 8);
+		add_filter('fw:option-type:addable-popup:value-from-input', array($this, '_filter_addable_popup_value_from_input'), 10, 2);
+	}
+
+	/**
+	 * @param null|int $length_limit
+	 * @return string
+	 */
+	protected function generate_id($length_limit = null)
+	{
+		$id = fw_rand_md5();
+
+		if ($length_limit) {
+			$id = substr($id, 0, (int)$length_limit);
+		}
+
+		return $id;
 	}
 
 	/**
@@ -1049,13 +1069,13 @@ class FW_Option_Type_Unique extends FW_Option_Type
 
 	protected function _get_value_from_input($option, $input_value) {
 		if (is_null($input_value)) {
-			$id = empty($option['value']) ? fw_rand_md5() : $option['value'];
+			$id = empty($option['value']) ? $this->generate_id($option['length']) : $option['value'];
 		} else {
 			$id = $input_value;
 		}
 
 		if (empty($id) || !is_string($id)) {
-			$id = fw_rand_md5();
+			$id = $this->generate_id($option['length']);
 		}
 
 		/**
@@ -1075,13 +1095,51 @@ class FW_Option_Type_Unique extends FW_Option_Type
 			}
 
 			while (isset(self::$ids[$post_id][$id])) {
-				$id = fw_rand_md5();
+				$id = $this->generate_id($option['length']);
 			}
 
 			self::$ids[$post_id][$id] = true;
 		}
 
 		return $id;
+	}
+
+	/**
+	 * Make sure there are no duplicate ids
+	 *
+	 * @param array $value
+	 * @param array $option
+	 *
+	 * @return array
+	 */
+	public function _filter_addable_popup_value_from_input($value, $option) {
+		/**
+		 * Extract only options type 'unique'
+		 */
+		{
+			$update_options = array();
+
+			fw_collect_options($update_options, $option['popup-options'], array(
+				'limit_option_types' => array($this->get_type())
+			));
+
+			if (empty($update_options)) {
+				return $value;
+			}
+		}
+
+		foreach ($value as &$row) {
+			foreach ($update_options as $opt_id => $opt) {
+				if (isset($row[$opt_id])) { // should not happen, but just in case, prevent notice
+					$row[$opt_id] = fw()->backend->option_type($opt['type'])->get_value_from_input(
+						array_merge($opt, array('value' => $row[$opt_id])),
+						null
+					);
+				}
+			}
+		}
+
+		return $value;
 	}
 }
 FW_Option_Type::register('FW_Option_Type_Unique');

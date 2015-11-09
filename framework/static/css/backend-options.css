@@ -2,6 +2,7 @@
 Included on pages where backend options are rendered
 */
 
+
 /* General */
 
 .postbox-with-fw-options > .inside,
@@ -256,6 +257,10 @@ form.fw-settings-form.fw-backend-side-tabs {
 	border-bottom: none;
 }
 
+body.rtl .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-list {
+	float: right;
+}
+
 .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents {
 	margin-left: 198px !important;
 	background: #fff;
@@ -274,6 +279,24 @@ form.fw-settings-form.fw-backend-side-tabs {
 	margin-right: 0;
 	border: 1px solid #d3d3d3;
 	border-width: 0 0 1px;
+}
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-wrapper > .fw-options-tabs-contents > .fw-inner > .fw-options-tab > .fw-options-tabs-wrapper > .fw-options-tabs-list {
+	padding: 0;
+}
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-wrapper > .fw-options-tabs-contents > .fw-inner > .fw-options-tab > .fw-options-tabs-wrapper > .fw-options-tabs-list ul li:first-child a.nav-tab {
+	margin: 0;
+}
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents > .fw-inner > .fw-options-tab > .fw-options-tabs-wrapper > .fw-options-tabs-list ul li {
+	border-left: 1px solid #e5e5e5;
+	border-right: none;
+}
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-wrapper > .fw-options-tabs-list ul li {
+	float: none;
+	margin-left: 0;
 }
 
 .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-list ul li a.nav-tab {
@@ -317,6 +340,11 @@ form.fw-settings-form.fw-backend-side-tabs {
 .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-list ul li.ui-state-active a.nav-tab:hover {
 	background: #bdbdbd;
 	color: #fff;
+}
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents {
+	margin-left: 0 !important;
+	margin-right: 198px !important;
 }
 
 .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents .fw-options-tabs-wrapper > .fw-options-tabs-list ul li.ui-state-active a.nav-tab {
@@ -478,6 +506,10 @@ form.fw-settings-form.fw-backend-side-tabs {
 		margin-left: 0 !important;
 	}
 
+	body.rtl .fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents {
+		margin-right: 0 !important;
+	}
+
 	.fw-backend-side-tabs .fw-options-tabs-first-level > .fw-options-tabs-contents > .fw-inner {
 		padding-bottom: 0;
 	}
@@ -517,18 +549,32 @@ form.fw-settings-form.fw-backend-side-tabs {
 	}
 }
 
+@media (max-width: 782px){
+	body.rtl .fw-options-tabs-wrapper > .fw-options-tabs-list ul li {
+		float: none;
+	}
+}
+
 
 /* form header */
 
 .fw-backend-side-tabs .fw-settings-form-header {
-	background: #0074a2;
+	background-color: #0074a2;
 	margin-top: 20px;
-
 	opacity: 0;
-
 	transition: opacity ease 0.3s;
 	-webkit-transition: opacity ease 0.3s;
 }
+
+/* make it match with admin color themes */
+body.admin-color-light .fw-backend-side-tabs .fw-settings-form-header { background-color: #777 }
+body.admin-color-light .fw-backend-side-tabs .fw-options-tabs-first-level { background: #ddd }
+body.admin-color-blue .fw-backend-side-tabs .fw-settings-form-header { background-color: #4796b3 }
+body.admin-color-coffee .fw-backend-side-tabs .fw-settings-form-header { background-color: #46403c }
+body.admin-color-ectoplasm .fw-backend-side-tabs .fw-settings-form-header { background-color: #413256 }
+body.admin-color-midnight .fw-backend-side-tabs .fw-settings-form-header { background-color: #26292c }
+body.admin-color-ocean .fw-backend-side-tabs .fw-settings-form-header { background-color: #627c83 }
+body.admin-color-sunrise .fw-backend-side-tabs .fw-settings-form-header { background-color: #be3631 }
 
 .fw-backend-side-tabs .fw-settings-form-header.initialized {
 	opacity: 1;
@@ -575,6 +621,10 @@ form.fw-settings-form.fw-backend-side-tabs {
 	text-align: right;
 }
 
+body.rtl .fw-backend-side-tabs .fw-settings-form-header .form-header-buttons {
+	text-align: left;
+}
+
 .fw-backend-side-tabs .fw-settings-form-header .form-header-buttons input {
 	-webkit-box-shadow: none;
 	box-shadow: none;
@@ -588,7 +638,8 @@ form.fw-settings-form.fw-backend-side-tabs {
 .fw-backend-side-tabs .fw-settings-form-header .form-header-buttons .submit-button-separator {
 	margin: 0 12px;
 	color: #358eb6;
-	border: 1px solid #358eb6;
+	border-color: rgb(255,255,255);
+	border-color: rgba(255,255,255,0.5);
 	border-width: 0 1px;
 	display: inline-block;
 	height: 14px;
@@ -613,6 +664,7 @@ form.fw-settings-form.fw-backend-side-tabs {
 	height: 26px;
 	line-height: 24px;
 	background: #fff;
+	border-color: transparent;
 	color: #0074a2;
 	-webkit-border-radius: 2px;
 	border-radius: 2px;
@@ -627,7 +679,8 @@ form.fw-settings-form.fw-backend-side-tabs {
 		text-align: center;
 	}
 
-	.fw-backend-side-tabs .fw-settings-form-header .form-header-buttons {
+	.fw-backend-side-tabs .fw-settings-form-header .form-header-buttons,
+	body.rtl .fw-backend-side-tabs .fw-settings-form-header .form-header-buttons {
 		text-align: inherit;
 	}
 
@@ -665,6 +718,12 @@ form.fw-settings-form.fw-backend-side-tabs {
 	border-radius: 2px;
 }
 
+body.rtl .fw-backend-side-tabs .form-footer-buttons input[type="submit"] {
+	float: right;
+	margin-left: 0;
+	margin-right: 26px;
+}
+
 .fw-backend-side-tabs .form-footer-buttons input[type="submit"].button-primary {
 	margin-left: 26px;
 }
@@ -673,9 +732,18 @@ form.fw-settings-form.fw-backend-side-tabs {
 	margin-left: 13px;
 }
 
+
+body.rtl .fw-backend-side-tabs .fw-options-tabs-wrapper + .form-footer-buttons {
+	margin: -71px 198px 0 0;
+}
+
 @media (max-width: 782px) {
 	.fw-backend-side-tabs .fw-options-tabs-wrapper + .form-footer-buttons {
 		margin: -1px 0 0; /* hide last option border */
+	}
+
+	body.rtl .fw-backend-side-tabs .fw-options-tabs-wrapper + .form-footer-buttons {
+		margin: -1px 0 0;
 	}
 }
 
@@ -837,6 +905,10 @@ body.rtl .fw-backend-option-design-default > .fw-backend-option-desc > .fw-inner
 	padding-right: 1px;
 }
 
+
+.fw-backend-option-design-customizer {
+	padding: 5px 0 10px;
+}
 
 .fw-backend-option-design-customizer > .fw-backend-option-desc {
 	padding-bottom: 6px;

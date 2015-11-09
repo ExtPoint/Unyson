@@ -37,8 +37,29 @@
 	margin-bottom: 0;
 }
 
-.fw-extensions-list .fw-extensions-list-item img.fw-extensions-list-item-thumbnail {
+.fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-thumbnail-wrapper {
+	height: 128px;
+	width: 128px;
+	text-align: center;
+	background: url('img/thumbnail-bg.jpg');
+	background-size: 128px;
+}
+
+.fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-thumbnail-wrapper img.fw-extensions-list-item-thumbnail {
 	display: block;
+	height: 100%;
+}
+
+.fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-thumbnail-wrapper span.fw-extensions-list-item-thumbnail {
+	display: inline;
+	vertical-align: middle;
+	color: #fff;
+	line-height: 128px;
+	font-size: 42px;
+}
+
+.fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-thumbnail-wrapper span.fw-extensions-list-item-thumbnail.dashicons {
+	font-size: 48px;
 }
 
 .fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-title {
@@ -64,10 +85,10 @@
 	vertical-align: top;
 }
 
-.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-2,
+/*.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-2,
 .fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-3 {
 	vertical-align: middle;
-}
+}*/
 
 @media (max-width: 782px) {
 	.fw-extensions-list .fw-extensions-list-item {
@@ -99,6 +120,10 @@
 }
 
 @media (min-width: 783px) {
+	.fw-extensions-list .fw-extensions-list-item .fw-extensions-list-item-title {
+		margin-top: 5px;
+	}
+
 	hr.fw-extensions-lists-separator {
 		margin: 22px 0 30px;
 		margin-right: 15px; /* same as .fw-extensions-list .fw-extensions-list-item padding-right */
@@ -115,6 +140,27 @@
 
 	.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell > p:last-child {
 		margin-bottom: 0;
+	}
+
+	.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-3 {
+		display: block;
+		position: absolute;
+		top: 20px;
+		right: 20px;
+		width: auto;
+	}
+
+	.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-3 form {
+		display: inline-block;
+	}
+
+	.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-3 form.extension-delete-form {
+		padding: 0 0 4px 15px;
+		vertical-align: bottom;
+	}
+
+	.fw-extensions-list .fw-extensions-list-item .fw-extension-list-item-table > .fw-extension-list-item-table-row > .fw-extension-list-item-table-cell.cell-3 form.extension-delete-form .btn-icon {
+		font-size: 16px;
 	}
 }
 

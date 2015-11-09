@@ -18,13 +18,43 @@
 				buttonAdd: elements.$container.attr('data-l10n-button-add'),
 				buttonEdit: elements.$container.attr('data-l10n-button-edit')
 			},
-			frame,
-			createFrame = function() {
+			frame;
+
+		var haveFilesDetails = elements.$container.attr('data-files-details') !== undefined;
+
+		if (haveFilesDetails) {
+			var parsedFilesDetails = JSON.parse(elements.$container.attr('data-files-details'));
+		}
+
+		var createFrame = function() {
 				frame = wp.media({
 					library: {
-						type: 'image'
+						type: haveFilesDetails ? parsedFilesDetails.mime_types : 'image'
 					}
 				});
+
+			if(haveFilesDetails) {
+				frame.on('content:render', function () {
+					var $view = this.first().frame.views.get('.media-frame-uploader')[0];
+
+					if(parsedFilesDetails.extra_mime_types.length > 0  && _.isArray(parsedFilesDetails.extra_mime_types)){
+						_.each(parsedFilesDetails.extra_mime_types, function(mime_type){
+							mOxie.Mime.addMimeType(mime_type);
+						});
+					}
+
+					$view.options.uploader.plupload = {
+						filters: {
+							mime_types: [
+								{
+									title: 'Images',
+									extensions: parsedFilesDetails.ext_files.join(',')
+								}
+							]
+						}
+					};
+				});
+			}
 
 				frame.on('ready', function() {
 					frame.modal.$el.addClass('fw-option-type-upload');

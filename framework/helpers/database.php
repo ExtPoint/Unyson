@@ -90,6 +90,21 @@
 			} else {
 				$post_id = $post->ID;
 			}
+
+			/**
+			 * Check if is Preview and use the preview post_id instead of real/current post id
+			 *
+			 * Note: WordPress changes the global $post content on preview:
+			 * 1. https://github.com/WordPress/WordPress/blob/2096b451c704715db3c4faf699a1184260deade9/wp-includes/query.php#L3573-L3583
+			 * 2. https://github.com/WordPress/WordPress/blob/4a31dd6fe8b774d56f901a29e72dcf9523e9ce85/wp-includes/revision.php#L485-L528
+			 */
+			if (is_preview()) {
+				$preview = wp_get_post_autosave($post->ID);
+
+				if ( is_object($preview) ) {
+					$post_id = $preview->ID;
+				}
+			}
 		}
 
 		$option_id = 'fw_options' . ( $option_id !== null ? '/' . $option_id : '' );
@@ -399,7 +414,26 @@
 	 */
 	function fw_get_db_customizer_option( $option_id = null, $default_value = null ) {
 		// note: this contains only changed controls/options
-		$all_db_values = get_theme_mod(FW_Option_Type::get_default_name_prefix(), array());
+		$all_db_values = get_theme_mod(FW_Option_Type::get_default_name_prefix(), null);
+
+		if (
+			!is_null($default_value)
+			&&
+			(
+				is_null($all_db_values)
+				||
+				is_null(fw_akg($option_id, $all_db_values))
+			)
+		) {
+			/**
+			 * Default value was provided in case db value is empty.
+			 *
+			 * Do not extract default values from options files (below)
+			 * maybe this function was called from options files and it will cause infinite loop,
+			 * that's why the developer provided a default value to prevent that.
+			 */
+			return $default_value;
+		}
 
 		// extract options default values
 		{
@@ -416,6 +450,10 @@
 
 				FW_Cache::set( $cache_key, $all_default_values );
 			}
+		}
+
+		if (is_null($all_db_values)) {
+			$all_db_values = array();
 		}
 
 		if (is_null($option_id)) {

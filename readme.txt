@@ -2,8 +2,8 @@
 Contributors: unyson, themefusecom
 Tags: page builder, cms, grid, layout, responsive, back up, backup, db backup, dump, migrate, schedule, search engine optimization, seo, media, slideshow, shortcode, slide, slideshare, slideshow, google sitemaps, sitemaps, analytics, google analytics, calendar, event, events, google maps, learning, lessons, sidebars, breadcrumbs, review, portfolio, framework
 Requires at least: 4.0.0
-Tested up to: 4.2
-Stable tag: 2.4.0
+Tested up to: 4.3
+Stable tag: 2.4.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -82,8 +82,57 @@ Yes; Unyson will work with any theme.
 
 == Changelog ==
 
+= 2.4.9 =
+* Fixed [#889](https://github.com/ThemeFuse/Unyson/issues/889) Some scripts/styles were enqueued too early
+* Minor fixes and improvements ([diff](https://github.com/ThemeFuse/Unyson/compare/v2.4.8...v2.4.9))
+
+= 2.4.8 =
+* Option type `color-picker` and `rgba-color-picker`: Added "Reset" button [#831](https://github.com/ThemeFuse/Unyson/issues/831)
+* Fixed [#853](https://github.com/ThemeFuse/Unyson/issues/853), [#856](https://github.com/ThemeFuse/Unyson/issues/856), [#794](https://github.com/ThemeFuse/Unyson/issues/794), [#865](https://github.com/ThemeFuse/Unyson/issues/865), [#873](https://github.com/ThemeFuse/Unyson/issues/873), [#876](https://github.com/ThemeFuse/Unyson/issues/876)
+* Unycon v2: Removed strange (not useful) icons
+
+    Demo and search `http://{your-site.com}/wp-content/plugins/unyson/framework/static/libs/unycon/`
+
+* For extension developers: Now you can set font icon as [thumbnail](http://manual.unyson.io/en/latest/manifest/extension.html)
+
+    ```
+    $manifest['thumbnail'] = 'fa fa-btc'; // or 'dashicons' or 'unycon'
+    ```
+
+* Extensions list: Changed extension buttons *(Install, Activate, Deactive, Remove)* position to make more space for description
+
+= 2.4.7 =
+* FontAwesome 4.4.0
+* Improved extension ajax install/uninstall [#809](https://github.com/ThemeFuse/Unyson/issues/809)
+* Fixed [#829](https://github.com/ThemeFuse/Unyson/issues/829), [#820](https://github.com/ThemeFuse/Unyson/issues/820), [Shortcodes#31](https://github.com/ThemeFuse/Unyson-Shortcodes-Extension/issues/31)
+
+= 2.4.6 =
+* Fixed: Extensions uninstalled after auto-update [#263](https://github.com/ThemeFuse/Unyson/issues/263)
+
+= 2.4.5 =
+* Fixed [#768](https://github.com/ThemeFuse/Unyson/issues/768)
+* Create `ABSPATH .'/fw-update.log'` on plugin update to help solve [#263](https://github.com/ThemeFuse/Unyson/issues/263)
+
+= 2.4.4 =
+* Fixed [#757](https://github.com/ThemeFuse/Unyson/issues/757), [#752](https://github.com/ThemeFuse/Unyson/issues/752#issuecomment-124839194)
+* fw.OptionsModal: Prevent Reset button to change the value. It should reset only the form's html
+* Minor refactor in code that is responsible for auto-save post options save
+
+= 2.4.3 =
+* [An attempt](https://github.com/ThemeFuse/Unyson/commit/9985875d56520caae4ce72c7111aea1e326777a5) to fix [#263](https://github.com/ThemeFuse/Unyson/issues/263)
+
+= 2.4.2 =
+* Allow containers without the `type` parameter in [Customizer options](http://manual.unyson.io/en/latest/options/introduction.html#customizer)
+
+= 2.4.1 =
+* Fixed [#742](https://github.com/ThemeFuse/Unyson/issues/742), [#731](https://github.com/ThemeFuse/Unyson/issues/731), [#728](https://github.com/ThemeFuse/Unyson/issues/728), [#726](https://github.com/ThemeFuse/Unyson/issues/726), [Shortcodes#29](https://github.com/ThemeFuse/Unyson-Shortcodes-Extension/issues/29)
+* Fixed: `addable-popup` option type wasn't saved in Customizer
+
 = 2.4.0 =
-* ...
+* Created "Container Types" and container type `popup` [#615](https://github.com/ThemeFuse/Unyson/issues/615)
+* Created the `fw_collect_options()` function [#740](https://github.com/ThemeFuse/Unyson/issues/740)
+* Added Unycon font icon. Demo `http://{your-host}/wp-content/plugins/unyson/framework/static/libs/unycon/demo/`
+* Minor fixes
 
 = 2.3.3 =
 * Fixed [#628](https://github.com/ThemeFuse/Unyson/issues/628), [#649](https://github.com/ThemeFuse/Unyson/issues/649), [#637](https://github.com/ThemeFuse/Unyson/issues/637), [#358](https://github.com/ThemeFuse/Unyson/issues/358)

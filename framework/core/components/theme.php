@@ -59,10 +59,11 @@ final class _FW_Component_Theme
 
 	/**
 	 * Return array with options from specified name/path
-	 * @param string $name
+	 * @param string $name '{theme}/framework-customizations/theme/options/{$name}.php'
+	 * @param array $variables These will be available in options file (like variables for view)
 	 * @return array
 	 */
-	public function get_options($name)
+	public function get_options($name, array $variables = array())
 	{
 		$path = $this->locate_path('/options/'. $name .'.php');
 
@@ -70,7 +71,7 @@ final class _FW_Component_Theme
 			return array();
 		}
 
-		$variables = fw_get_variables_from_file($path, array('options' => array()));
+		$variables = fw_get_variables_from_file($path, array('options' => array()), $variables);
 
 		return $variables['options'];
 	}
@@ -190,7 +191,13 @@ final class _FW_Component_Theme
 	 */
 	public function _action_fw_extensions_init()
 	{
-		if (is_admin() && !fw()->theme->manifest->check_requirements()) {
+		if (
+			is_admin()
+			&&
+			!fw()->theme->manifest->check_requirements()
+			&&
+		    current_user_can('manage_options')
+		) {
 			FW_Flash_Messages::add(
 				'fw_theme_requirements',
 				__('Theme requirements not met:', 'fw') .' '. fw()->theme->manifest->get_not_met_requirement_text(),

@@ -43,6 +43,11 @@ function _action_fw_theme_settings_footer_scripts() {
 add_action('admin_print_footer_scripts', '_action_fw_theme_settings_footer_scripts', 20);
 
 endif;
+
+$texts = apply_filters('fw_settings_form_texts', array(
+	'save_button' => __('Save Changes', 'fw'),
+	'reset_button' => __('Reset Options', 'fw'),
+));
 ?>
 
 <?php if ($side_tabs): ?>
@@ -66,10 +71,24 @@ endif;
 		<div class="fw-col-xs-12 fw-col-sm-6">
 			<div class="form-header-buttons">
 				<?php
+				/**
+				 * Make sure firs submit button is Save button
+				 * because the first button is "clicked" when you press enter in some input
+				 * and the form is submitted.
+				 * So to prevent form Reset on input Enter, make Save button first in html
+				 */
+
+				echo fw_html_tag('input', array(
+					'type' => 'submit',
+					'name' => '_fw_save_options',
+					'class' => 'fw-hidden',
+				));
+				?>
+				<?php
 				echo fw_html_tag('input', array(
 					'type' => 'submit',
 					'name' => '_fw_reset_options',
-					'value' => __('Reset Options', 'fw'),
+					'value' => $texts['reset_button'],
 					'class' => 'button-secondary button-large submit-button-reset',
 				))
 				?>
@@ -78,7 +97,7 @@ endif;
 				echo fw_html_tag('input', array(
 					'type' => 'submit',
 					'name' => '_fw_save_options',
-					'value' => __('Save Changes', 'fw'),
+					'value' => $texts['save_button'],
 					'class' => 'button-primary button-large submit-button-save',
 				))
 				?>
@@ -102,14 +121,14 @@ endif;
 	echo fw_html_tag('input', array(
 		'type' => 'submit',
 		'name' => '_fw_save_options',
-		'value' => __('Save Changes', 'fw'),
+		'value' => $texts['save_button'],
 		'class' => 'button-primary button-large',
 	));
 	echo ($side_tabs ? '' : ' &nbsp;&nbsp; ');
 	echo fw_html_tag('input', array(
 		'type' => 'submit',
 		'name' => '_fw_reset_options',
-		'value' => __('Reset Options', 'fw'),
+		'value' => $texts['reset_button'],
 		'class' => 'button-secondary button-large',
 	));
 ?>
@@ -375,3 +394,5 @@ jQuery(function($){
 	});
 </script>
 <?php endif; ?>
+
+<?php do_action('fw_settings_form_footer'); ?>

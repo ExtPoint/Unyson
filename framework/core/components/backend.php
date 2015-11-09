@@ -157,7 +157,22 @@ final class _FW_Component_Backend {
 			add_action('admin_menu', array($this, '_action_admin_menu'));
 			add_action('add_meta_boxes', array($this, '_action_create_post_meta_boxes'), 10, 2);
 			add_action('init', array($this, '_action_init'), 20);
-			add_action('admin_enqueue_scripts', array($this, '_action_admin_enqueue_scripts'), 8);
+			add_action('admin_enqueue_scripts', array($this, '_action_admin_register_scripts'),
+				/**
+				 * Usually when someone register/enqueue a script/style to be used in other places
+				 * in 'admin_enqueue_scripts' actions with default (not set) priority 10, they use priority 9.
+				 * Use here priority 8, in case those scripts/styles used in actions with priority 9
+				 * are using scripts/styles registered here
+				 */
+				8
+			);
+			add_action('admin_enqueue_scripts', array($this, '_action_admin_enqueue_scripts'),
+				/**
+				 * In case some custom defined option types are using script/styles registered
+				 * in actions with default priority 10 (make sure the enqueue is executed after register)
+				 */
+				11
+			);
 
 			// render and submit options from javascript
 			{
@@ -169,7 +184,6 @@ final class _FW_Component_Backend {
 		add_action('save_post', array($this, '_action_save_post'), 7, 3);
 		add_action('wp_restore_post_revision', array($this, '_action_restore_post_revision'), 10, 2);
 		add_action('_wp_put_post_revision', array($this, '_action__wp_put_post_revision'));
-		add_action('wp_creating_autosave', array($this, '_action_trigger_wp_create_autosave'));
 
 		add_action('customize_register', array($this, '_action_customize_register'), 7);
 	}
@@ -254,6 +268,19 @@ final class _FW_Component_Backend {
 	}
 
 	private function register_static() {
+		if (
+			!doing_action('admin_enqueue_scripts')
+			&&
+			!did_action('admin_enqueue_scripts')
+		) {
+			/**
+			 * Do not wp_enqueue/register_...() because at this point not all handles has been registered
+			 * and maybe they are used in dependencies in handles that are going to be enqueued.
+			 * So as a result some handles will not be equeued because of not registered dependecies.
+			 */
+			return;
+		}
+
 		if ( $this->static_registered ) {
 			return;
 		}
@@ -328,6 +355,7 @@ final class _FW_Component_Backend {
 					'done'     => __( 'Done', 'fw' ),
 					'ah_sorry' => __( 'Ah, Sorry', 'fw' ),
 					'save'     => __( 'Save', 'fw' ),
+					'reset'    => __( 'Reset', 'fw' ),
 				),
 			) );
 		}
@@ -453,7 +481,7 @@ final class _FW_Component_Backend {
 			return;
 		}
 
-		if ( ! fw()->theme->get_settings_options() ) {
+		if ( ! fw()->theme->locate_path('/options/settings.php') ) {
 			return;
 		}
 
@@ -554,7 +582,7 @@ final class _FW_Component_Backend {
 						'target' => '_blank',
 						'href'   => 'https://twitter.com/home?'. http_build_query(array(
 							'status' => __('Unyson WordPress Framework is the fastest and easiest way to develop a premium theme. I highly recommend it', 'fw')
-								.' http://unyson.io/ #unysonwp',
+								.' http://unyson.io/ #UnysonWP',
 						)),
 						'onclick' => 'return !window.open(this.href, \'Twitter\', \'width=640,height=430\')',
 					), __('Twitter', 'fw')),
@@ -763,6 +791,7 @@ final class _FW_Component_Backend {
 	}
 
 	/**
+	 * Save meta from $_POST to fw options (post meta)
 	 * @param int $post_id
 	 * @param WP_Post $post
 	 * @param bool $update
@@ -814,78 +843,57 @@ final class _FW_Component_Backend {
 			 * Use the 'fw_post_options_update' action
 			 */
 			do_action( 'fw_save_post_options', $post_id, $post, $old_values );
+		} elseif ($original_post_id = wp_is_post_autosave( $post_id )) {
+			do {
+				$parent = get_post($post->post_parent);
+
+				if ( ! $parent instanceof WP_Post ) {
+					break;
+				}
+
+				if (
+					isset($_POST['post_ID'])
+					&&
+					intval($_POST['post_ID']) === intval($parent->ID)
+				) {} else {
+					break;
+				}
+
+				if (empty($_POST[ FW_Option_Type::get_default_name_prefix() ])) {
+					// this happens on Quick Edit
+					break;
+				}
+
+				$current_values = fw_get_options_values_from_input(
+					fw()->theme->get_post_options($parent->post_type)
+				);
+
+				fw_set_db_post_option(
+					$post->ID,
+					null,
+					array_diff_key( // remove handled values
+						$current_values,
+						$this->process_options_handlers(
+							fw()->theme->get_post_options($parent->post_type),
+							$current_values
+						)
+					)
+				);
+			} while(false);
 		} elseif ($original_post_id = wp_is_post_revision( $post_id )) {
 			/**
 			 * Do nothing, the
 			 * - '_wp_put_post_revision'
 			 * - 'wp_restore_post_revision'
-			 * - 'wp_creating_autosave'
 			 * actions will handle this
 			 */
-		} elseif ($original_post_id = wp_is_post_autosave( $post_id )) {
-			// fixme: I don't know how to test this. The execution never entered here
-			FW_Flash_Messages::add(fw_rand_md5(), 'Unhandled auto-save');
-		} else {
+		}  else {
 			/**
 			 * This happens on:
 			 * - post add (auto-draft): do nothing
 			 * - revision restore: do nothing, that is handled by the 'wp_restore_post_revision' action
 			 */
 		}
-	}
-
-	/**
-	 * @param array $autosave
-	 *
-	 * @internal
-	 **/
-	public function _action_trigger_wp_create_autosave( $autosave ) {
-		add_action( 'save_post', array( $this, '_action_update_autosave_options' ), 10, 2 );
-	}
-
-	/**
-	 * Happens on post Preview
-	 *
-	 * @param int $post_id
-	 * @param WP_Post $post
-	 *
-	 * @internal
-	 **/
-	public function _action_update_autosave_options( $post_id, $post ) {
-		remove_action( 'save_post', array( $this, '_action_update_autosave_options' ) );
-
-		remove_action( 'save_post', array( $this, '_action_save_post' ), 7 );
-
-		do {
-			$parent = get_post($post->post_parent);
-
-			if ( ! $parent instanceof WP_Post ) {
-				break;
-			}
-
-			if (empty($_POST[ FW_Option_Type::get_default_name_prefix() ])) {
-				// this happens on Quick Edit
-				break;
-			}
-
-			$current_values = fw_get_options_values_from_input(
-				fw()->theme->get_post_options($parent->post_type)
-			);
-
-			fw_set_db_post_option(
-				$post->ID,
-				null,
-				array_diff_key( // remove handled values
-					$current_values,
-					$this->process_options_handlers(
-						fw()->theme->get_post_options($parent->post_type),
-						$current_values
-					)
-				)
-			);
-		} while(false);
-
-		add_action( 'save_post', array( $this, '_action_save_post' ), 7, 3 );
 	}
 
 	/**
@@ -1028,6 +1036,10 @@ final class _FW_Component_Backend {
 		do_action( 'fw_save_term_options', $term_id, $taxonomy, $old_values );
 	}
 
+	public function _action_admin_register_scripts() {
+		$this->register_static();
+	}
+
 	public function _action_admin_enqueue_scripts() {
 		global $current_screen, $plugin_page, $post;
 
@@ -1075,8 +1087,6 @@ final class _FW_Component_Backend {
 				do_action( 'fw_admin_enqueue_scripts:term', $current_screen->taxonomy );
 			}
 		}
-
-		$this->register_static();
 	}
 
 	/**
@@ -1123,12 +1133,6 @@ final class _FW_Component_Backend {
 			}
 		}
 
-		/**
-		 * Fix booleans
-		 *
-		 * In POST, booleans are transformed to strings: 'true' and 'false'
-		 * Transform them back to booleans
-		 */
 		{
 			foreach ( fw_extract_only_options( $options ) as $option_id => $option ) {
 				if ( ! isset( $values[ $option_id ] ) ) {
@@ -1136,21 +1140,55 @@ final class _FW_Component_Backend {
 				}
 
 				/**
-				 * We detect if option is using booleans by sending it a boolean input value
-				 * If it returns a boolean, then it works with booleans
+				 * Fix booleans
+				 *
+				 * In POST, booleans are transformed to strings: 'true' and 'false'
+				 * Transform them back to booleans
 				 */
-				if ( ! is_bool(
-					fw()->backend->option_type( $option['type'] )->get_value_from_input( $option, true )
-				) ) {
-					continue;
-				}
+				do {
+					/**
+					 * Detect if option is using booleans by sending it a boolean input value
+					 * If it returns a boolean, then it works with booleans
+					 */
+					if ( ! is_bool(
+						fw()->backend->option_type( $option['type'] )->get_value_from_input( $option, true )
+					) ) {
+						break;
+					}
 
-				if ( is_bool( $values[ $option_id ] ) ) {
-					// value is already boolean, does not need to fix
-					continue;
-				}
+					if ( is_bool( $values[ $option_id ] ) ) {
+						// value is already boolean, does not need to fix
+						break;
+					}
 
-				$values[ $option_id ] = ( $values[ $option_id ] === 'true' );
+					$values[ $option_id ] = ( $values[ $option_id ] === 'true' );
+
+					continue 2;
+				} while(false);
+
+				/**
+				 * Fix integers
+				 *
+				 * In POST, integers are transformed to strings: '0', '1', '2', ...
+				 * Transform them back to integers
+				 */
+				do {
+					if (!is_numeric($values[ $option_id ])) {
+						// do nothing if value is not a number
+						break;
+					}
+
+					/**
+					 * Detect if option is using integer value by checking $option['value']
+					 */
+					if ( isset($option['value']) && !is_int($option['value']) ) {
+						continue;
+					}
+
+					$values[ $option_id ] = (int)$values[ $option_id ];
+
+					continue 2;
+				} while(false);
 			}
 		}
 
@@ -1316,7 +1354,17 @@ final class _FW_Component_Backend {
 			$design = $this->default_render_design;
 		}
 
-		{
+		if (
+			!doing_action('admin_enqueue_scripts')
+			&&
+			!did_action('admin_enqueue_scripts')
+		) {
+			/**
+			 * Do not wp_enqueue/register_...() because at this point not all handles has been registered
+			 * and maybe they are used in dependencies in handles that are going to be enqueued.
+			 * So as a result some handles will not be equeued because of not registered dependecies.
+			 */
+		} else {
 			/**
 			 * register scripts and styles
 			 * in case if this method is called before enqueue_scripts action
@@ -1422,7 +1470,18 @@ final class _FW_Component_Backend {
 	 * @param array $options
 	 */
 	public function enqueue_options_static( $options ) {
-		{
+		if (
+			!doing_action('admin_enqueue_scripts')
+			&&
+			!did_action('admin_enqueue_scripts')
+		) {
+			/**
+			 * Do not wp_enqueue/register_...() because at this point not all handles has been registered
+			 * and maybe they are used in dependencies in handles that are going to be enqueued.
+			 * So as a result some handles will not be equeued because of not registered dependecies.
+			 */
+			return;
+		} else {
 			/**
 			 * register scripts and styles
 			 * in case if this method is called before enqueue_scripts action
@@ -1468,12 +1527,20 @@ final class _FW_Component_Backend {
 			$design = $this->default_render_design;
 		}
 
-		/**
-		 * register scripts and styles
-		 * in case if this method is called before enqueue_scripts action
-		 * and option types has some of these in their dependencies
-		 */
-		$this->register_static();
+		if (
+			!doing_action('admin_enqueue_scripts')
+			&&
+			!did_action('admin_enqueue_scripts')
+		) {
+			/**
+			 * Do not wp_enqueue/register_...() because at this point not all handles has been registered
+			 * and maybe they are used in dependencies in handles that are going to be enqueued.
+			 * So as a result some handles will not be equeued because of not registered dependecies.
+			 */
+		} else {
+			$this->register_static();
+		}
+
 
 		if ( ! in_array( $design, $this->available_render_designs ) ) {
 			trigger_error( 'Invalid render design specified: ' . $design, E_USER_WARNING );
@@ -1794,9 +1861,22 @@ final class _FW_Component_Backend {
 	 */
 	public function _action_enqueue_customizer_static()
 	{
-		fw()->backend->enqueue_options_static(
-			fw()->theme->get_customizer_options()
-		);
+		{
+			$options_for_enqueue = array();
+			$customizer_options = fw()->theme->get_customizer_options();
+
+			/**
+			 * In customizer options is allowed to have container with unspecified (or not existing) 'type'
+			 * fw()->backend->enqueue_options_static() tries to enqueue both options and container static
+			 * not existing container types will throw notices.
+			 * To prevent that, extract and send it only options (without containers)
+			 */
+			fw_collect_options($options_for_enqueue, $customizer_options);
+
+			fw()->backend->enqueue_options_static($options_for_enqueue);
+
+			unset($options_for_enqueue, $customizer_options);
+		}
 
 		wp_enqueue_script(
 			'fw-backend-customizer',
@@ -1804,6 +1884,13 @@ final class _FW_Component_Backend {
 			array( 'jquery', 'fw-events', 'backbone' ),
 			fw()->manifest->get_version(),
 			true
+		);
+		wp_localize_script(
+			'fw-backend-customizer',
+			'_fw_backend_customizer_localized',
+			array(
+				'change_timeout' => apply_filters('fw_customizer_option_change_timeout', 333),
+			)
 		);
 
 		do_action('fw_admin_enqueue_scripts:customizer');

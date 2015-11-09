@@ -14,10 +14,28 @@ input.fw-option-type-color-picker.iris-error {
 	color: #000;
 }
 
-.fw-inner .iris-picker.iris-border {
+.fw-option-type-color-picker-with-reset-default > .iris-palette-container {
+	bottom: 27px !important;
+}
+
+.fw-option-type-color-picker-iris,
+.fw-option-type-color-picker-iris.iris-picker {
 	z-index: 999;
 	position: absolute;
 }
+
+.fw-option-type-color-picker-iris .fw-option-type-color-picker-reset-default {
+	width: 139px;
+	margin-top: 2px;
+	cursor: pointer;
+}
+
+.fw-option-type-color-picker-iris .fw-option-type-color-picker-reset-default span {
+	line-height: 16px;
+	padding-left: 2px;
+	float: left;
+}
+
 
 .fw-backend-option-input-type-color-picker .fw-option-help-in-input {
 	top: 4px !important;

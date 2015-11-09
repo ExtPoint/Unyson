@@ -56,3 +56,31 @@ input.fw-option-type-rgba-color-picker.iris-error {
 	width: 89%;
 	left: -1px;
 }
+
+
+.fw-option-type-rgba-color-picker-iris,
+.fw-option-type-rgba-color-picker-iris.iris-picker {
+	z-index: 999;
+	position: absolute;
+}
+
+.fw-option-type-rgba-color-picker-iris .fw-option-type-rgba-color-picker-reset-default {
+	width: 139px;
+	margin-top: 2px;
+	cursor: pointer;
+}
+
+.fw-option-type-rgba-color-picker-iris .fw-option-type-rgba-color-picker-reset-default span {
+	line-height: 16px;
+	padding-left: 2px;
+	float: left;
+}
+
+
+.fw-option-type-rgba-color-picker-with-reset-default > .iris-palette-container {
+	bottom: 27px !important;
+}
+
+.fw-option-type-rgba-color-picker-with-reset-default .fw-alpha-container {
+	top: 192px;
+}

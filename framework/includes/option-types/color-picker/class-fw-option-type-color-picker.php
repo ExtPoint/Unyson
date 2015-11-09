@@ -30,6 +30,17 @@ class FW_Option_Type_Color_Picker extends FW_Option_Type
 			fw()->manifest->get_version(),
 			true
 		);
+
+		wp_localize_script(
+			'fw-option-'. $this->get_type(),
+			'_fw_option_type_'. str_replace('-', '_', $this->get_type()) .'_localized',
+			array(
+				'l10n' => array(
+					'reset_to_default' => __('Reset', 'fw'),
+					'reset_to_initial' => __('Reset', 'fw'),
+				),
+			)
+		);
 	}
 
 	/**
@@ -42,6 +53,7 @@ class FW_Option_Type_Color_Picker extends FW_Option_Type
 		$option['attr']['size']   = '7';
 		$option['attr']['maxlength'] = '7';
 		$option['attr']['onclick'] = 'this.select()';
+		$option['attr']['data-default'] = $option['value'];
 
 		return '<input type="text" '. fw_attr_to_html($option['attr']) .'>';
 	}

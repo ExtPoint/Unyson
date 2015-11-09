@@ -220,6 +220,8 @@ function fw_print($value) {
 			margin: 10px 30px;
 			padding: 1px;
 			border-radius: 5px;
+			position: relative;
+			z-index: 11110;
 		}
 		div.fw_print_r_group div.fw_print_r {
 			margin: 9px;
@@ -534,14 +536,11 @@ function fw_locate_theme_path($rel_path) {
  */
 function fw_render_view($file_path, $view_variables = array(), $return = true) {
 	extract($view_variables, EXTR_REFS);
-
 	unset($view_variables);
 
 	if ($return) {
 		ob_start();
-
 		require $file_path;
-
 		return ob_get_clean();
 	} else {
 		require $file_path;
@@ -552,19 +551,23 @@ function fw_render_view($file_path, $view_variables = array(), $return = true) {
  * Safe load variables from an file
  * Use this function to not include files directly and to not give access to current context variables (like $this)
  * @param string $file_path
- * @param array $_variables array('variable_name' => 'default_value')
+ * @param array $_extract_variables Extract these from file array('variable_name' => 'default_value')
+ * @param array $_set_variables Set these to be available in file (like variables in view)
  * @return array
  */
-function fw_get_variables_from_file($file_path, array $_variables) {
+function fw_get_variables_from_file($file_path, array $_extract_variables, array $_set_variables = array()) {
+	extract($_set_variables, EXTR_REFS);
+	unset($_set_variables);
+
 	require $file_path;
 
-	foreach ($_variables as $variable_name => $default_value) {
+	foreach ($_extract_variables as $variable_name => $default_value) {
 		if (isset($$variable_name)) {
-			$_variables[$variable_name] = $$variable_name;
+			$_extract_variables[$variable_name] = $$variable_name;
 		}
 	}
 
-	return $_variables;
+	return $_extract_variables;
 }
 
 /**
@@ -789,7 +792,12 @@ function fw_collect_options(&$result, &$options, $settings = array(), $_recursio
 				if (
 					is_array($settings['limit_container_types'])
 					&&
-					!in_array($option['type'], $settings['limit_container_types'])
+					(
+						// Customizer options can contain options with not existing or empty $option['type']
+						empty($option['type'])
+						||
+						!in_array($option['type'], $settings['limit_container_types'])
+					)
 				) {
 					break;
 				}
@@ -919,11 +927,27 @@ function fw_get_options_values_from_input(array $options, $input_array = null) {
 }
 
 /**
- * 'abc[def][xyz]'   -> 'abc/def/xyz'
- * 'abc[def][xyz][]' -> 'abc/def/xyz'
+ * @param $attr_name
+ * @param bool $set_mode
+ * @return mixed
  */
-function fw_html_attr_name_to_array_multi_key($attr_name) {
-	$attr_name = str_replace('[]', '',  $attr_name);
+function fw_html_attr_name_to_array_multi_key($attr_name, $set_mode = false) {
+	if ($set_mode) {
+		/**
+		 * The key will be used to set value in array
+		 * 'hello[world][]' -> 'hello/world/'
+		 * $array['hello']['world'][] = $value;
+		 */
+		$attr_name = str_replace('[]', '/', $attr_name);
+	} else {
+		/**
+		 * The key will be used to get value from array
+		 * 'hello[world][]' -> 'hello/world'
+		 * $value = $array['hello']['world'];
+		 */
+		$attr_name = str_replace('[]', '', $attr_name);
+	}
+
 	$attr_name = str_replace('][', '/', $attr_name);
 	$attr_name = str_replace('[',  '/', $attr_name);
 	$attr_name = str_replace(']',  '',  $attr_name);
@@ -1018,7 +1042,7 @@ function fw_get_google_fonts_v2() {
 			update_option( 'fw_google_fonts', array(
 				'last_update' => time(),
 				'fonts'       => $body
-			) );
+			), false );
 
 			return $body;
 		} else {
@@ -1444,4 +1468,122 @@ function fw_get_image_sizes( $size = '' ) {
 	}
 
 	return $sizes;
+}
+
+/**
+ * @param string $icon A string that is meant to be an icon (an image, a font icon class, or something else)
+ * @param array Additional attributes
+ * @return string
+ */
+function fw_string_to_icon_html($icon, array $attributes = array()) {
+	if (
+		preg_match('/\.(png|jpg|jpeg|gif|svg|webp)$/', $icon)
+		||
+		preg_match('/^data:image\//', $icon)
+	) {
+		// http://.../image.png
+		$tag = 'img';
+		$attr = array(
+			'src' => $icon,
+			'alt' => 'icon',
+		);
+	} elseif (preg_match('/^[a-zA-Z0-9\-_ ]+$/', $icon)) {
+		// 'font-icon font-icon-class'
+		$tag = 'span';
+		$attr = array(
+			'class' => trim($icon),
+		);
+	} else {
+		// can't detect. maybe it's raw html '<span ...'
+		return $icon;
+	}
+
+	foreach ($attributes as $attr_name => $attr_val) {
+		if (isset($attr[$attr_name])) {
+			if ($attr_name === 'class') {
+				$attr[$attr_name] .= ' '. $attr_val;
+			} else {
+				// ignore. do not overwrite already set attributes
+			}
+		} else {
+			$attr[$attr_name] = (string)$attr_val;
+		}
+	}
+
+	return fw_html_tag($tag, $attr);
+}
+
+/**
+ * @return string|null
+ * @since 2.4.10
+ */
+function fw_get_json_last_error_message() {
+	switch (json_last_error()) {
+		case JSON_ERROR_NONE:
+			return null; // __('No errors', 'fw');
+			break;
+		case JSON_ERROR_DEPTH:
+			return __('Maximum stack depth exceeded', 'fw');
+			break;
+		case JSON_ERROR_STATE_MISMATCH:
+			return __('Underflow or the modes mismatch', 'fw');
+			break;
+		case JSON_ERROR_CTRL_CHAR:
+			return __('Unexpected control character found', 'fw');
+			break;
+		case JSON_ERROR_SYNTAX:
+			return __('Syntax error, malformed JSON', 'fw');
+			break;
+		case JSON_ERROR_UTF8:
+			return __('Malformed UTF-8 characters, possibly incorrectly encoded', 'fw');
+			break;
+		default:
+			return __('Unknown error', 'fw');
+			break;
+	}
+}
+
+/**
+ * Return mime_types by file extension ex : input : array( 'png', 'jpg', 'jpeg' ) => output : array( 'image/jpeg' ).
+ *
+ * @param array $type
+ *
+ * @return array
+ */
+function fw_get_mime_type_by_ext( $type = array() ) {
+	$result = array();
+
+	foreach ( wp_get_mime_types() as $key => $mime_type ) {
+		$types = explode( '|', $key );
+		foreach ( $type as $item ) {
+			if ( in_array( $item, $types ) && ! in_array( $mime_type, $result ) ) {
+				$result[] = $mime_type;
+			}
+		}
+	}
+
+	return $result;
+}
+
+/**
+ * Return types from file extensions ex : input array( 'png', 'jpg', 'zip' ) => output : array( 'image', 'archive' ).
+ *
+ * @see wp_ext2type() function.
+ *
+ * @param array $ext_array
+ *
+ * @return array
+ */
+function fw_multi_ext2type( $ext_array = array() ) {
+
+	$type_collector = array();
+
+	foreach ( $ext_array as $ext ) {
+		$type = wp_ext2type( $ext );
+		if ( ! in_array( $type, $type_collector ) ) {
+			$type_collector[] = $type;
+		}
+	}
+
+	return $type_collector;
 }
